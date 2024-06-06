@@ -1,22 +1,10 @@
-/*
- *	Copyright (c) 2020 Alexander Pankratov, <ap@swapped.ch>
- *	https://swapped.ch/note-detector
- */
-
-/*
- *	Distributed under the terms of the 2-clause BSD license. 
- *	https://www.opensource.org/licenses/bsd-license.php
- */
-
  const OnePi  = 1 * Math.PI;
  const TwoPi  = 2 * Math.PI;
  const FourPi = 4 * Math.PI;
  
  function sinc(x) { return x ? Math.sin(OnePi * x) / (OnePi * x) : 1; }
  
- /*
-  *
-  */
+
  const tapers =
  {
      'raw'      : null,
@@ -140,10 +128,6 @@
      return peaks_q[i].x;
  }
  
- /*
-  *	https://github.com/aubio/aubio/blob/master/src/pitch/pitchyin.c
-  *	+ minor changes
-  */
  function Detector_yin(dataSize, sampleRate)
  {
      this.conf =

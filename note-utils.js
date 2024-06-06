@@ -1,8 +1,3 @@
-/*
- *  Distributed under the terms of the 2-clause BSD license. 
- *  https://www.opensource.org/licenses/bsd-license.php
- */
-
 function hzToNote(freq)
 {
     var note = 12 * (Math.log(freq / 440) / Math.log(2));
