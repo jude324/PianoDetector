@@ -2,12 +2,29 @@
 <html>
 <head>
 <title>NoteDetector 0.1</title>
-<link rel="stylesheet" type="text/css" href="styles.css">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://unpkg.com/vextab@2.0.13/releases/vextab.css">
 </head>
 <body>
-	<div id=go>Go</div>
+	<div id="go">Go</div>
 	<div class="button-container">
-		<button id="pick-song">Pick a song</button>
+		<label>
+			<br />
+			<select id="songSelect">
+				<option selected disabled value="">Pick a Song</option>
+				<optgroup label="Easy">
+					<option value="[4/4; C4 C4 G4 G4 A4 A4 G4 -][F4 F4 E4 E4 D4 D4 C4 -]N[G4 G4 F4 F4 E4 E4 D4 -][G4 G4 F4 F4 E4 E4 D4 -]N[C4 C4 G4 G4 A4 A4 G4 -][F4 F4 E4 E4 D4 D4 C4 -]
+">Twinkle Twinkle Little Star</option>
+					<option value="[4/4; C#5 B4 A4 G#4]">Idk</option>
+					<option value="[4/4; C#5 B4 A4 G#4 C#5 B4 A4 G#4 C#5 B4 A4 G#4 C#5 B4 A4 G#4 C#5 B4 A4 G#4]">Idk2</option>
+				</optgroup>
+				<optgroup label="Medium">
+					<option value="[4/4; B4 C#5 D5 C#5 B4 A4 F#4 -][E4 F#4 B4 F#4 G#4 A4 -][G#4 F#4 G#4 E4 F#4 C#3 F#3 B3 A#3]N[4/4; B4 C#5 D5 C#5 B4 A4 E5 F#5 A#5]">Hanachirusato</option>
+				</optgroup>
+				<optgroup label="Hard">
+				</optgroup>
+			</select>
+		</label>
 	  </div>
 	<div id=show-options><a href=#>Options</a></div>
 
@@ -35,11 +52,39 @@
 
 	<div id=result>Click Go and play a note</div>
 
-	<div id=trace></div>
+<!--	<div id=trace></div>-->
+	<div id="tabs"></div>
 
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vexflow@4.2.4/build/cjs/vexflow.js"></script>
+	<script type="text/javascript" src="https://unpkg.com/vextab@3.0.6/releases/vextab-div.js"></script>
 	<script type="text/javascript" src="note-detector.js"></script>
 	<script type="text/javascript" src="note-utils.js"></script>
+	<script type="text/javascript" src="simple-tab-parser.js"></script>
+	<script>
+		const songSelect = document.getElementById("songSelect");
+
+		let noteQueue = [];
+		let currentPosition = 0;
+
+		function renderTabs(){
+			document.getElementById("tabs").innerHTML = '';
+			const renderer = new Vex.Flow.Renderer($('#tabs')[0], Vex.Flow.Renderer.Backends.SVG);
+			const artist = new Artist(10, 30, 800, {scale: 0.7});
+			new VexTab(artist).parse(simpleNotation2VexTab(songSelect.value, currentPosition))
+			artist.render(renderer);
+		}
+
+		function loadSong() {
+			currentPosition = 0;
+			renderTabs();
+			noteQueue = extractNotes(songSelect.value);
+			console.log(noteQueue)
+		}
+
+		songSelect.onchange = loadSong;
+		if (songSelect.value) loadSong();
+	</script>
 	<script type="text/javascript">
 		
 		'use strict';
@@ -66,9 +111,10 @@
 		//
 		function log(text)
 		{
-			var trace = document.getElementById('trace');
-			trace.innerHTML = text ? trace.innerHTML + text + '<br>' : '';
-			trace.scrollTop = trace.scrollHeight;
+			console.log(text)
+			// var trace = document.getElementById('trace');
+			// trace.innerHTML = text ? trace.innerHTML + text + '<br>' : '';
+			// trace.scrollTop = trace.scrollHeight;
 		}
 
 		function plot(v_float, color, clear, f_min, f_max)
@@ -103,6 +149,8 @@
 			
 			render.stroke();
 		}
+		let lastNote = '';
+		let lastVol = 0;
 
 		//
 		function update()
@@ -116,15 +164,32 @@
 
 			for (let i=0; i<input_8.length; i++)
 				input_f[i] = input_8[i] / 128.0 - 1.0;
-		
+
 			detector.update(input_f);
 
 			plot(detector.buf, '#08f', true, -1, +1);
 			
 			note = detector.getNote();
 			desc = (note && note.stable) ? hzToNoteString(note.freq) : '';
-
 			$('#result').html(desc);
+			const currentNote = desc.replace(".", "");
+			$(`button[aria-label!='']`).css("background", '');
+			if (currentPosition < noteQueue.length) {
+				$(`button[aria-label='${noteQueue[currentPosition]}']`).css("background", '#3f0');
+				if (lastNote !== currentNote || ((detector.vol - lastVol) / lastVol * 100) > 50) {
+					lastNote = currentNote;
+					if (noteQueue[currentPosition] === currentNote){
+						currentPosition += 1;
+						renderTabs();
+					}
+				}
+			} else {
+				$('#result').html("Finished");
+			}
+			if (currentNote) {
+				$(`button[aria-label='${currentNote}']`).css("background", '#08f');
+			}
+			lastVol = detector.vol;
 		}
 
 		//
@@ -291,13 +356,14 @@
 		//
 		$(document).ready(function(){
 
-			canvas = $('#graph canvas')[0];;
+			canvas = $('#graph canvas')[0];
 			render = canvas.getContext("2d");
 
 			updateConfig();
 			updateGraphTitle();
-		
+			//start();
 		});
+
 	</script>
 		<div id="kb88" class="kb kb--88">
 			<!-- Ensure buttons are properly closed and have correct attributes -->
