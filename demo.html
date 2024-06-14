@@ -11,6 +11,22 @@
 
   <body>
     <div id="go">Go</div>
+    <div
+      style="
+        position: absolute;
+        top: 1rem;
+        right: 100px;
+        cursor: pointer;
+        background-color: lightcoral;
+        padding: 10px;
+        border-radius: 10px;
+        color: black;
+        font-weight: 1000;
+      "
+      id="logout-btn"
+    >
+      Logout
+    </div>
     <div class="button-container">
       <label>
         <br />
@@ -83,6 +99,8 @@
     <script type="text/javascript" src="simple-tab-parser.js"></script>
     <script>
       const songSelect = document.getElementById("songSelect");
+      const logoutButton = document.querySelector("#logout-btn");
+      const currentUser = localStorage.getItem("current_user");
 
       let noteQueue = [];
       let currentPosition = 0;
@@ -91,6 +109,18 @@
       function getProgress(currentNote, totalNotes) {
         return (100 * currentNote) / totalNotes;
       }
+
+      logoutButton.addEventListener("click", (event) => {
+        localStorage.removeItem("current_user");
+        window.location.assign("LoginPage.html");
+      });
+
+      document.addEventListener("DOMContentLoaded", (event) => {
+        if (!currentUser) {
+          window.location.assign("LoginPage.html");
+          return;
+        }
+      });
 
       function renderTabs() {
         document.getElementById("tabs").innerHTML = "";
